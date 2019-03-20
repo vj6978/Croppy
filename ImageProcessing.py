@@ -34,7 +34,7 @@ class ImageProcessing():
     """
             Input and Output destination file paths converted into suitable formats
     """ 
-    def create_training_data(self, directoryPath, destinationPath, colorToGrayOption, width, height):
+    def create_training_data(self, directoryPath, destinationPath, colorToGrayOption, width, height, rotation):
 
         directoryPath, destinationPath = self.fix_path(directoryPath, destinationPath)
 
@@ -48,7 +48,14 @@ class ImageProcessing():
                     else:
                         img_array = cv2.imread(path, cv2.IMREAD_COLOR)
                     norm_img = cv2.resize(img_array, (int(width), int(height)))
-                    cv2.imwrite(destinationPath+"\\\\"+img+"_processed.jpg", norm_img)
+
+                    num_rows, num_cols = norm_img.shape[:2]
+                    rotation_matrix = cv2.getRotationMatrix2D((num_cols/2, num_rows/2), int(rotation), 1)
+                    img_rotation = cv2.warpAffine(norm_img, rotation_matrix, (num_cols, num_rows))
+
+                    cv2.imwrite(destinationPath+"\\\\"+img+"_croppy_processed.jpg", img_rotation)
+
+                    # cv2.imwrite(destinationPath+"\\\\"+img+"_processed.jpg", norm_img)
                 except Exception as e:
                     with open("ErrorLog.txt", "w+") as fileHandle:
                         fileHandle.write(str(img)+" [Error: "+str(e)+"]\n")
@@ -62,7 +69,13 @@ class ImageProcessing():
                 else:
                     img_array = cv2.imread(path, cv2.IMREAD_COLOR)
                 norm_img = cv2.resize(img_array, (int(width), int(height)))
-                cv2.imwrite(destinationPath+"\\\\"+"croppy_processed.jpg", norm_img)
+
+                num_rows, num_cols = norm_img.shape[:2]
+                rotation_matrix = cv2.getRotationMatrix2D((num_cols/2, num_rows/2), int(rotation), 1)
+                img_rotation = cv2.warpAffine(norm_img, rotation_matrix, (num_cols, num_rows))
+
+                cv2.imwrite(destinationPath+"\\\\"+"croppy_processed.jpg", img_rotation)
+                # cv2.imwrite(destinationPath+"\\\\"+"croppy_processed.jpg", norm_img)
             except Exception as e:
                 with open("ErrorLog.txt", "w+") as fileHandle:
                     fileHandle.write(str(directoryPath)+" [Error: "+str(e)+"]\n")

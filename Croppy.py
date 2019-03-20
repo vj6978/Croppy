@@ -26,10 +26,12 @@ class Window(QWidget):
         self.destination_folder = QLineEdit()
         self.width_input = QLineEdit()
         self.height_input = QLineEdit()
+        self.skew_parameter = QLineEdit()
         self.progress_bar = QProgressBar(self)
         self.payload.setPlaceholderText("Directory")
         self.destination_folder.setPlaceholderText("Send Output Here")
         self.file_payload.setPlaceholderText("File")
+        self.skew_parameter.setPlaceholderText("Enter Skew Degrees (Default is 0)")
         self.colour_selection_title = QLabel("Convert To")
         self.image_resize_title = QLabel("Resize To")
         self.change_size_label = QLabel("Resize")
@@ -37,6 +39,7 @@ class Window(QWidget):
         self.height_label = QLabel("Height")
         self.open_directory = QLabel("Open Directory")
         self.open_file = QLabel("Open File")
+        self.skew_label = QLabel("Skew (Default is 0)")
         self.gray_colour_scale_radio = QRadioButton("Grayscale")
         self.process_files_button = QPushButton("Start")
         self.open_input_directories = QPushButton("Select Input Directory Path")
@@ -102,6 +105,10 @@ class Window(QWidget):
         imageParametersHBox.addLayout(imageResizeVBox)
         imageParametersHBox.addStretch()
 
+        skewParametersVBox = QVBoxLayout()
+        skewParametersVBox.addWidget(self.skew_label)
+        skewParametersVBox.addWidget(self.skew_parameter)
+
         #The Processing Button Panel
 
         processButtonHBox = QHBoxLayout()
@@ -113,6 +120,7 @@ class Window(QWidget):
         windowSetting = QVBoxLayout()
         windowSetting.addLayout(selectDirectoryHBox)
         windowSetting.addLayout(imageParametersHBox)
+        windowSetting.addLayout(skewParametersVBox)
         windowSetting.addLayout(processButtonHBox)
 
         self.setLayout(windowSetting)
@@ -127,13 +135,14 @@ class Window(QWidget):
             colour_option = True
         
         if len(self.payload.text()) > 0:
-            processor.create_training_data(self.payload.text(), self.destination_folder.text(), colour_option, self.width_input.text(), self.height_input.text())
+            processor.create_training_data(self.payload.text(), self.destination_folder.text(), colour_option, self.width_input.text(), self.height_input.text(), self.skew_parameter.text())
         else:
-            processor.create_training_data(self.file_payload.text(), self.destination_folder.text(), colour_option, self.width_input.text(), self.height_input.text())
+            processor.create_training_data(self.file_payload.text(), self.destination_folder.text(), colour_option, self.width_input.text(), self.height_input.text(), self.skew_parameter.text())
         
         self.process_files_button.setEnabled(True)
         finishedProcessing = QMessageBox()
         finishedProcessing.setText("Finished Processing!")
+        self.resetAll()
         finishedProcessing.exec_()
 
     def open_directories_clicked(self):
@@ -158,6 +167,14 @@ class Window(QWidget):
         help_message = QMessageBox()
         help_message.setText(self.help_text)
         help_message.exec_()
+
+    def resetAll(self):
+        self.payload.setText("")
+        self.file_payload.setText("")
+        self.destination_folder.setText("")
+        self.width_input.setText("")
+        self.height_input.setText("")
+        self.skew_parameter.setText("")
 
 app = QApplication(sys.argv)
 window = Window()
