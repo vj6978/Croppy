@@ -1,0 +1,2 @@
+ [Error: OpenCV(3.4.5) C:\projects\opencv-python\opencv\modules\imgproc\src\resize.cpp:3784: error: (-215:Assertion failed) !ssize.empty() in function 'cv::resize'
+]
