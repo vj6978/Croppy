@@ -1,1 +1,1 @@
-C:/Users/Vimal James/Desktop/Code/ML/Dogs_and_Cats/PetImages/Cat/Example/2.jpg [Error: must be real number, not str]
+C:\\Users\\Vimal James\\Desktop\\Code\\ML\\Dogs_and_Cats\\PetImages\\Cat\\Example [Error: invalid literal for int() with base 10: '']

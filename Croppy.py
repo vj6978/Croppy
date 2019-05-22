@@ -1,10 +1,16 @@
+"""
+    Croppy
+    Author: Vimal James
+"""
+
 import os
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui
 from ImageProcessing import ImageProcessing
+from parameters import Parameters
 
-"""
+"""    
     Croppy is a tool for image manipulation. Images to be fed into CNNs need to be preprocessed.
     Having to write scripts to do this everytime and having to tweak parameters in code everytime
     to obtain the required results can be cumbersome.
@@ -31,7 +37,7 @@ class Window(QWidget):
         self.payload.setPlaceholderText("Directory")
         self.destination_folder.setPlaceholderText("Send Output Here")
         self.file_payload.setPlaceholderText("File")
-        self.skew_parameter.setPlaceholderText("Enter Skew Degrees (Default is 0)")
+        self.skew_parameter.setText("0")
         self.colour_selection_title = QLabel("Convert To")
         self.image_resize_title = QLabel("Resize To")
         self.change_size_label = QLabel("Resize")
@@ -54,7 +60,9 @@ class Window(QWidget):
                        input field with the text Select Input File Path. If you wish to manipulate
                        multiple images at a time, store all images into a directory and input the path
                        to the directory in the input filed that contains the text Select Input Directory Path.
-                       Enter other choices and press Start."""
+                       Enter other choices and press Start.
+                       
+                       Note: When entering file paths, use \ and not /."""
 
         self.help_button.clicked.connect(self.help_button_clicked)
 
@@ -84,7 +92,7 @@ class Window(QWidget):
         colourScaleVBox = QVBoxLayout()
         colourScaleVBox.addWidget(self.colour_selection_title)
         colourScaleVBox.addWidget(self.gray_colour_scale_radio)
-
+        
         imageResizeVBox = QVBoxLayout()
         imageResizeVBox.addWidget(self.image_resize_title)
         widthOptionsContainer = QHBoxLayout()
@@ -128,17 +136,26 @@ class Window(QWidget):
         self.show()
 
     def process_files_button_clicked(self):
-        processor = ImageProcessing()
+        params = Parameters()
         colour_option = 0
         self.process_files_button.setDisabled(True)
         if self.gray_colour_scale_radio.isChecked():
             colour_option = True
+
+        params.setColourOption(colour_option)
+        params.setHeightInput(self.height_input.text())
+        params.setSkew(self.skew_parameter.text())
+        params.setWidthInput(self.width_input.text())
+        params.setDestination( self.destination_folder.text())
         
         if len(self.payload.text()) > 0:
-            processor.create_training_data(self.payload.text(), self.destination_folder.text(), colour_option, self.width_input.text(), self.height_input.text(), self.skew_parameter.text())
+            params.setFile(self.payload.text())
         else:
-            processor.create_training_data(self.file_payload.text(), self.destination_folder.text(), colour_option, self.width_input.text(), self.height_input.text(), self.skew_parameter.text())
-        
+            params.setFile(self.file_payload.text())
+
+        processor = ImageProcessing()
+        processor.process(params)
+
         self.process_files_button.setEnabled(True)
         finishedProcessing = QMessageBox()
         finishedProcessing.setText("Finished Processing!")

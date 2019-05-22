@@ -1,16 +1,19 @@
-import numpy as np
+"""
+    Croppy
+    Author: Vimal James
+"""
+
 import os
 import cv2
 import pickle
+import multiprocessing
+from concurrent.futures import ThreadPoolExecutor
 
 """
     This class contains the algorithm that actually manipulates the images.
 """
 
 class ImageProcessing():
-
-    # def __init__(self):
-    #     super(ImageProcessing, self).__init__()
 
     """
         Croppy provides a picked file of information if required
@@ -31,58 +34,51 @@ class ImageProcessing():
         destination = destination.replace("\\", "\\\\")
         return (payload, destination)
 
-    """
-            Input and Output destination file paths converted into suitable formats
-    """ 
-    def create_training_data(self, directoryPath, destinationPath, colorToGrayOption, width, height, rotation):
 
-        directoryPath, destinationPath = self.fix_path(directoryPath, destinationPath)
+    def process(self, params):
+
+        directoryPath, destinationPath = self.fix_path(params.getFile(), params.getDestination())
+
+        params.setDirectoryPath(directoryPath)
+        params.setDestinationPath(destinationPath)
+
+        i = 0
 
         if os.path.isdir(directoryPath):
-        
-            for img in os.listdir(directoryPath):
-                try:
+
+            with ThreadPoolExecutor(multiprocessing.cpu_count()) as executor:
+
+                for img in os.listdir(directoryPath):
+
                     path = directoryPath+"\\\\"+img
-                    if colorToGrayOption:
-                        img_array = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-                    else:
-                        img_array = cv2.imread(path, cv2.IMREAD_COLOR)
-                    norm_img = cv2.resize(img_array, (int(width), int(height)))
-
-                    num_rows, num_cols = norm_img.shape[:2]
-                    rotation_matrix = cv2.getRotationMatrix2D((num_cols/2, num_rows/2), int(rotation), 1)
-                    img_rotation = cv2.warpAffine(norm_img, rotation_matrix, (num_cols, num_rows))
-
-                    cv2.imwrite(destinationPath+"\\\\"+img+"_croppy_processed.jpg", img_rotation)
-
-                    # cv2.imwrite(destinationPath+"\\\\"+img+"_processed.jpg", norm_img)
-                except Exception as e:
-                    with open("ErrorLog.txt", "w+") as fileHandle:
-                        fileHandle.write(str(img)+" [Error: "+str(e)+"]\n")
-                    fileHandle.close()
+                    i = i + 1
+                    try:
+                        executor.submit(self.algo, path, params, i)
+                    except Exception as e:
+                        print("Error: ", e)
 
         else:
-            try:
                 path = directoryPath
-                if colorToGrayOption:
-                    img_array = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-                else:
-                    img_array = cv2.imread(path, cv2.IMREAD_COLOR)
-                norm_img = cv2.resize(img_array, (int(width), int(height)))
-
-                num_rows, num_cols = norm_img.shape[:2]
-                rotation_matrix = cv2.getRotationMatrix2D((num_cols/2, num_rows/2), int(rotation), 1)
-                img_rotation = cv2.warpAffine(norm_img, rotation_matrix, (num_cols, num_rows))
-
-                cv2.imwrite(destinationPath+"\\\\"+"croppy_processed.jpg", img_rotation)
-                # cv2.imwrite(destinationPath+"\\\\"+"croppy_processed.jpg", norm_img)
-            except Exception as e:
-                with open("ErrorLog.txt", "w+") as fileHandle:
-                    fileHandle.write(str(directoryPath)+" [Error: "+str(e)+"]\n")
-                fileHandle.close()
+                self.algo(path, params, i)
 
 
-        # self.create_pickle_file()
+    def algo(self, path, params, i):
 
+        try:
+            if params.getColourOption():
+                img_array = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+            else:
+                img_array = cv2.imread(path, cv2.IMREAD_COLOR)
 
-            
+            norm_img = cv2.resize(img_array, (int(params.getWidthInput()), int(params.getHeightInput())))
+
+            num_rows, num_cols = norm_img.shape[:2]
+            rotation_matrix = cv2.getRotationMatrix2D((num_cols / 2, num_rows / 2), int(params.getSkew()), 1)
+            img_rotation = cv2.warpAffine(norm_img, rotation_matrix, (num_cols, num_rows))
+
+            cv2.imwrite(params.getDestination()+"\\\\"+str(i)+"_processed.jpg", img_rotation)
+
+        except Exception as e:
+            with open("ErrorLog.txt", "w+") as fileHandle:
+                fileHandle.write(str(params.getDirectoryPath()) + " [Error: " + str(e) + "]\n")
+            fileHandle.close()
